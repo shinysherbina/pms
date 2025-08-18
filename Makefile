@@ -9,7 +9,7 @@ migrate:
 
 # Make migrations
 makemigrations:
-	docker-compose exec backend python manage.py makemigrations core
+	docker-compose exec backend python manage.py makemigrations
 
 # Seed the database
 seed:

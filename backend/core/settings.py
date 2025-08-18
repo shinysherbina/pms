@@ -34,6 +34,8 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'core.apps.CoreConfig',
+    'projects',
+    'tasks',
     'graphene_django',
     'django.contrib.admin',
     'django.contrib.auth',

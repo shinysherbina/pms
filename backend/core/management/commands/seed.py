@@ -1,7 +1,9 @@
 # core/management/commands/seed.py
 
 from django.core.management.base import BaseCommand
-from core.models import Organization, Project, Task, TaskComment
+from core.models import Organization
+from projects.models import Project
+from tasks.models import Task, TaskComment
 from django.utils import timezone
 import random
 
