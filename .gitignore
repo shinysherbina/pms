@@ -1,0 +1,74 @@
+# ─── Python / Django ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+.env
+.env.*
+
+# ─── Graphene / GraphQL ──────────────────────────────────────────
+*.graphql
+*.gql
+.graphqlconfig
+.graphqlrc
+.graphqlrc.json
+.graphqlrc.yaml
+.graphqlrc.yml
+
+# ─── Docker ──────────────────────────────────────────────────────
+*.pid
+*.db
+*.sock
+*.tar
+*.gz
+*.bak
+*.swp
+*.tmp
+*.log
+docker-compose.override.yml
+.dockerignore
+
+# ─── Node / React / TypeScript ───────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+coverage/
+build/
+dist/
+.vite/
+.next/
+out/
+*.tsbuildinfo
+
+# ─── IDEs / Editors ──────────────────────────────────────────────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ─── OS-specific ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Makefile / Misc ─────────────────────────────────────────────
+*.out
+*.o
+*.bin
+*.coverage
+.mypy_cache/
+.pytest_cache/
