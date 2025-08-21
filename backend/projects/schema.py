@@ -1,31 +1,68 @@
-# projects/schema.py
+# backend/projects/schema.py
+
 import graphene
 from graphene_django.types import DjangoObjectType
-from graphene import relay
 from projects.models import Project
 from core.models import Organization
+from tasks.models import Task  
+from .types import ProjectStatusCounts, TaskStatusCounts
+
 
 class ProjectType(DjangoObjectType):
     class Meta:
         model = Project
-        interfaces = (relay.Node,)
         fields = ("id", "name", "status", "description", "due_date", "organization")
 
-class ProjectQuery(graphene.ObjectType):
-    projects = graphene.List(ProjectType, organization_id=graphene.ID(required=False))
+    completed_tasks = graphene.Int()
+    task_count = graphene.Int()
+
+    def resolve_completed_tasks(self, info):
+        return Task.objects.filter(project=self, status="done").count()
+
+    def resolve_task_count(self, info):
+        return Task.objects.filter(project=self).count()
+
+class ProjectListQuery(graphene.ObjectType):
+    projects = graphene.List(ProjectType, organization_id=graphene.Int(required=False))
 
     def resolve_projects(self, info, organization_id=None):
         if organization_id:
             return Project.objects.filter(organization_id=organization_id)
         return Project.objects.all()
 
+class ProjectStatsQuery(graphene.ObjectType):
+    organization_project_status_counts = graphene.Field(
+        ProjectStatusCounts,
+        organization_id=graphene.Int(required=True)
+    )
+
+    project_task_status_counts = graphene.Field(
+        TaskStatusCounts,
+        project_id=graphene.Int(required=True)
+    )
+
+    def resolve_organization_project_status_counts(self, info, organization_id):
+        qs = Project.objects.filter(organization_id=organization_id)
+        return ProjectStatusCounts(
+            active=qs.filter(status="active").count(),
+            completed=qs.filter(status="completed").count(),
+            archived=qs.filter(status="archived").count()
+        )
+
+    def resolve_project_task_status_counts(self, info, project_id):
+        qs = Task.objects.filter(project_id=project_id)
+        return TaskStatusCounts(
+            todo=qs.filter(status="todo").count(),
+            in_progress=qs.filter(status="in_progress").count(),
+            done=qs.filter(status="done").count()
+        )
 class CreateProject(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
         status = graphene.String(required=False)
         description = graphene.String(required=False)
         due_date = graphene.types.datetime.Date(required=False)
-        organization_id = graphene.ID(required=True)
+        organization_id = graphene.Int(required=True)
 
     project = graphene.Field(ProjectType)
 
@@ -42,7 +79,7 @@ class CreateProject(graphene.Mutation):
 
 class UpdateProject(graphene.Mutation):
     class Arguments:
-        id = graphene.ID(required=True)
+        id = graphene.Int(required=True)
         name = graphene.String()
         status = graphene.String()
         description = graphene.String()
@@ -60,3 +97,7 @@ class UpdateProject(graphene.Mutation):
 class ProjectMutation(graphene.ObjectType):
     create_project = CreateProject.Field()
     update_project = UpdateProject.Field()
+
+class ProjectQuery(ProjectListQuery, ProjectStatsQuery, graphene.ObjectType):
+    pass
+

@@ -42,3 +42,9 @@ reset:
 # Run custom SQL query (pass QUERY='SELECT * FROM core_task WHERE status=''done''')
 query:
 	@docker-compose exec db psql -U postgres -d pms -c "$(QUERY)"
+
+rebuild:
+	docker-compose down -v
+	docker-compose up -d --build
+	make migrate
+	make reset

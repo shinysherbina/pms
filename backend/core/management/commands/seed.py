@@ -1,10 +1,9 @@
-# core/management/commands/seed.py
-
 from django.core.management.base import BaseCommand
 from core.models import Organization
 from projects.models import Project
 from tasks.models import Task, TaskComment
 from django.utils import timezone
+from django.db import connection
 import random
 
 class Command(BaseCommand):
@@ -15,12 +14,23 @@ class Command(BaseCommand):
         parser.add_argument('--projects', type=int, default=5, help='Projects per organization')
         parser.add_argument('--tasks', type=int, default=5, help='Tasks per project')
         parser.add_argument('--wipe', action='store_true', help='Clear existing data before seeding')
+        parser.add_argument('--timestamps', action='store_true', help='Add realistic timestamps')
+
+    def reset_sequences(self):
+        """Reset Postgres auto-increment sequences for predictable IDs."""
+        with connection.cursor() as cursor:
+            tables = ['core_organization', 'projects_project', 'tasks_task', 'tasks_taskcomment']
+            for table in tables:
+                cursor.execute(f"ALTER SEQUENCE {table}_id_seq RESTART WITH 1;")
 
     def handle(self, *args, **options):
         org_count = options['orgs']
         proj_count = options['projects']
         task_count = options['tasks']
         wipe = options['wipe']
+        use_timestamps = options['timestamps']
+
+        random.seed(42)  # Ensure reproducibility
 
         if wipe:
             self.stdout.write("🧹 Wiping existing data...")
@@ -28,6 +38,7 @@ class Command(BaseCommand):
             Task.objects.all().delete()
             Project.objects.all().delete()
             Organization.objects.all().delete()
+            self.reset_sequences()
 
         self.stdout.write(f"🌱 Seeding {org_count} orgs × {proj_count} projects × {task_count} tasks...")
 
@@ -39,9 +50,11 @@ class Command(BaseCommand):
 
                 tasks = []
                 for k in range(1, task_count + 1):
+                    created_at = timezone.now() - timezone.timedelta(days=random.randint(0, 30)) if use_timestamps else None
                     task = Task.objects.create(
                         title=f"Task {k} of Project {j} (Org {i})",
-                        project=proj
+                        project=proj,
+                        created_at=created_at if created_at else timezone.now()
                     )
                     tasks.append(task)
 

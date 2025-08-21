@@ -1,12 +1,11 @@
-# projects/types.py
 import graphene
 
 class ProjectStatusCounts(graphene.ObjectType):
     active = graphene.Int()
     completed = graphene.Int()
-    on_hold = graphene.Int()
+    archived = graphene.Int()
 
-class TaskStatusCountsType(graphene.ObjectType):
+class TaskStatusCounts(graphene.ObjectType):  # 🔄 Renamed to match usage in queries.py
     todo = graphene.Int()
     in_progress = graphene.Int()
     done = graphene.Int()

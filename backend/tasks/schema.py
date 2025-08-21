@@ -1,7 +1,10 @@
-# tasks/schema.py
+# backend/tasks/schema.py
+
 import graphene
 from graphene_django.types import DjangoObjectType
 from tasks.models import Task, TaskComment
+
+# ------------------ Types ------------------
 
 class TaskType(DjangoObjectType):
     class Meta:
@@ -15,20 +18,53 @@ class TaskCommentType(DjangoObjectType):
     class Meta:
         model = TaskComment
         fields = (
-            "id", "content", "author_email", "timestamp", "task"
+            "id", "content", "author_email", "task"
         )
 
-class TaskQuery(graphene.ObjectType):
-    tasks = graphene.List(TaskType, project_id=graphene.ID())
+# ------------------ Queries ------------------
+
+class TaskListQuery(graphene.ObjectType):
+    tasks = graphene.List(TaskType, project_id=graphene.Int())
+    task = graphene.Field(TaskType, id=graphene.Int(required=True))
+    task_comments = graphene.List(TaskCommentType)
 
     def resolve_tasks(root, info, project_id=None):
         if project_id:
             return Task.objects.filter(project_id=project_id)
         return Task.objects.all()
     
+    def resolve_task(root, info, id):
+        try:
+            return Task.objects.get(pk=id)
+        except Task.DoesNotExist:
+            return None
+        
+    def resolve_task_comments(root, info):
+        return TaskComment.objects.all()
+
+class TaskCommentQuery(graphene.ObjectType):
+    # task = graphene.Field(TaskType, id=graphene.Int(required=True))
+    task_comment = graphene.List(TaskCommentType, task_id=graphene.Int(required=False))
+
+
+    # def resolve_task(self, info, id):
+    #     try:
+    #         return Task.objects.get(pk=id)
+    #     except Task.DoesNotExist:
+    #         return None
+
+    def resolve_task_comment(self, info, task_id):
+        if task_id:
+            return TaskComment.objects.filter(task_id=task_id)
+        return TaskComment.objects.all()
+
+
+
+# ------------------ Mutations ------------------
+
 class CreateTask(graphene.Mutation):
     class Arguments:
-        project_id = graphene.ID(required=True)
+        project_id = graphene.Int(required=True)
         title = graphene.String(required=True)
         description = graphene.String()
         status = graphene.String()
@@ -48,7 +84,7 @@ class CreateTask(graphene.Mutation):
 
 class UpdateTask(graphene.Mutation):
     class Arguments:
-        id = graphene.ID(required=True)
+        id = graphene.Int(required=True)
         title = graphene.String()
         description = graphene.String()
         status = graphene.String()
@@ -69,7 +105,7 @@ class UpdateTask(graphene.Mutation):
 
 class CreateTaskComment(graphene.Mutation):
     class Arguments:
-        task_id = graphene.ID(required=True)
+        task_id = graphene.Int(required=True)
         content = graphene.String(required=True)
         author_email = graphene.String(required=True)
 
@@ -85,7 +121,7 @@ class CreateTaskComment(graphene.Mutation):
 
 class UpdateTaskComment(graphene.Mutation):
     class Arguments:
-        id = graphene.ID(required=True)
+        id = graphene.Int(required=True)
         content = graphene.String()
         author_email = graphene.String()
 
@@ -102,8 +138,13 @@ class UpdateTaskComment(graphene.Mutation):
         comment.save()
         return UpdateTaskComment(comment=comment)
 
+# ------------------ Mutation Root ------------------
+
 class TaskMutation(graphene.ObjectType):
     create_task = CreateTask.Field()
     update_task = UpdateTask.Field()
     create_task_comment = CreateTaskComment.Field()
     update_task_comment = UpdateTaskComment.Field()
+
+class TaskQuery(TaskListQuery, TaskCommentQuery, graphene.ObjectType):
+    pass
