@@ -83,6 +83,22 @@ export const GET_PROJECT_STATUS_COUNTS = gql`
 
 // Mutations
 // ---------
+export const CREATE_ORGANIZATION = gql`
+  mutation CreateOrganization(
+    $name: String!
+    $slug: String!
+    $contactEmail: String!
+  ) {
+    createOrganization(name: $name, slug: $slug, contactEmail: $contactEmail) {
+      organization {
+        id
+        name
+        slug
+        contactEmail
+      }
+    }
+  }
+`;
 
 export const CREATE_PROJECT = gql`
   mutation CreateProject(
